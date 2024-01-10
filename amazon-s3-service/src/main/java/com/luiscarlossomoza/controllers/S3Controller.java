@@ -28,6 +28,11 @@ public class S3Controller {
     @Autowired
     private AmazonS3 s3Client;
 
+    @GetMapping({"/","/home"})
+    public ResponseEntity<RequestResponse> welcomeMessage(){
+        return ResponseEntity.ok(new RequestResponse("Welcome to Luis Somoza Amazon S3 Graduate Work API"));
+    }
+
     @PostMapping("/upload")
     public ResponseEntity<RequestResponse> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         return s3Service.uploadFile(file);
