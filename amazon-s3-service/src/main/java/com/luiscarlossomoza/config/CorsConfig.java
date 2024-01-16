@@ -29,7 +29,7 @@ public class CorsConfig implements WebMvcConfigurer {
     {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.setAllowedOrigins(List.of("https://spp-angular-frontend.web.app"));
+        corsConfiguration.setAllowedOrigins(List.of("https://spp-angular-frontend.web.app", "http://localhost:4200"));
         corsConfiguration.setAllowedMethods(Arrays.asList("GET","POST", "PUT", "DELETE"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

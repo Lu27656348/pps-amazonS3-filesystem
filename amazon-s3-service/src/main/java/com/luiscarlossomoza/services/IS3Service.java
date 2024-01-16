@@ -13,6 +13,8 @@ public interface IS3Service {
     ResponseEntity<RequestResponse> uploadFile(MultipartFile file) throws IOException;
     ResponseEntity<RequestResponse> uploadGraduateWork(MultipartFile file) throws IOException;
 
+    ResponseEntity<RequestResponse> uploadCoordinatorEvaluation(MultipartFile file) throws IOException;
+
     ResponseEntity<RequestResponse> uploadRevision(MultipartFile file) throws IOException;
 
     ResponseEntity<RequestResponse> uploadFinalSubmittion(MultipartFile file) throws IOException;

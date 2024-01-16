@@ -24,7 +24,9 @@ import java.util.regex.Pattern;
 @Service
 public class S3ServiceImpl implements IS3Service {
     private final AmazonS3 s3client;
-    private final String FOLDER_NAME = "proposal/";
+    private final String FOLDER_NAME = "propuestas/";
+
+    private final String FOLDER_R_NAME = "propuestas/revisiones/";
     private final String FOLDER_GW_NAME = "graduatework/";
 
     private final String FOLDER_GWF_NAME = "graduatework/final/";
@@ -72,6 +74,24 @@ public class S3ServiceImpl implements IS3Service {
                 File fileTemp = File.createTempFile("upload", ".tmp");
                 file.transferTo(fileTemp);
                 s3client.putObject(new PutObjectRequest("bucket-gw-storage",FOLDER_NAME + file.getOriginalFilename(),fileTemp));
+                return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
+            }else{
+                System.out.println("Nombre invalido");
+                return ResponseEntity.badRequest().body(new RequestResponse("Error en nombre de archivo"));
+            }
+
+
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    public ResponseEntity<RequestResponse> uploadCoordinatorEvaluation(MultipartFile file) throws IOException {
+        try (InputStream is = file.getInputStream()) {
+            if(validateRevisionFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
+                File fileTemp = File.createTempFile("upload", ".tmp");
+                file.transferTo(fileTemp);
+                s3client.putObject(new PutObjectRequest("bucket-gw-storage",FOLDER_R_NAME + file.getOriginalFilename(),fileTemp));
                 return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
             }else{
                 return ResponseEntity.badRequest().body(new RequestResponse("Error en nombre de archivo"));

@@ -38,6 +38,11 @@ public class S3Controller {
         return s3Service.uploadFile(file);
     }
 
+    @PostMapping("/upload/graduatework/coordinator/evaluation")
+    public ResponseEntity<RequestResponse> uploadCoordinatorEvaluation(@RequestParam("file") MultipartFile file) throws IOException {
+        return s3Service.uploadCoordinatorEvaluation(file);
+    }
+
     @PostMapping("/upload/graduatework")
     public ResponseEntity<RequestResponse> uploadGraduateWork(@RequestParam("file") MultipartFile file) throws IOException {
         return s3Service.uploadGraduateWork(file);
@@ -105,6 +110,56 @@ public class S3Controller {
         try {
             // Obtener el objeto del archivo de S3
             S3Object object = s3Client.getObject("bucket-gw-storage", FOLDER_GW_NAME + fileName.getFileName());
+            S3ObjectInputStream s3is = object.getObjectContent();
+            // Configurar las cabeceras de la respuesta
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            ContentDisposition contentDisposition = ContentDisposition.attachment()
+                    .filename(fileName.getFileName())
+                    .build();
+            headers.setContentDisposition(contentDisposition);
+            headers.setContentLength(object.getObjectMetadata().getContentLength());
+
+
+            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(s3is));
+
+        } catch (Exception e) {
+            // Manejar la excepción
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/download/root")
+    public ResponseEntity<InputStreamResource> downloadFromRoot(@RequestBody ValidateFileNameRequest fileName) throws IOException {
+        try {
+            // Obtener el objeto del archivo de S3
+            S3Object object = s3Client.getObject("bucket-gw-storage", fileName.getFileName());
+            S3ObjectInputStream s3is = object.getObjectContent();
+            // Configurar las cabeceras de la respuesta
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            ContentDisposition contentDisposition = ContentDisposition.attachment()
+                    .filename(fileName.getFileName())
+                    .build();
+            headers.setContentDisposition(contentDisposition);
+            headers.setContentLength(object.getObjectMetadata().getContentLength());
+
+
+            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(s3is));
+
+        } catch (Exception e) {
+            // Manejar la excepción
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/download/proposal/evaluation")
+    public ResponseEntity<InputStreamResource> downloadProposalEvaluation(@RequestBody ValidateFileNameRequest fileName) throws IOException {
+        try {
+            // Obtener el objeto del archivo de S3
+            S3Object object = s3Client.getObject("bucket-gw-storage", "propuestas/revisiones/" + fileName.getFileName());
             S3ObjectInputStream s3is = object.getObjectContent();
             // Configurar las cabeceras de la respuesta
             HttpHeaders headers = new HttpHeaders();
