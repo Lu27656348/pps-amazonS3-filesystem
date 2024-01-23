@@ -129,12 +129,13 @@ public class S3ServiceImpl implements IS3Service {
         return false;
     }
 
-    public ResponseEntity<RequestResponse> uploadFile(MultipartFile file) throws IOException {
+    public ResponseEntity<RequestResponse> uploadFile(MultipartFile file,CreateUserFolder createUserFolder) throws IOException {
         try (InputStream is = file.getInputStream()) {
+            String studentFolderPath = createUserFolder.getStudentDNI() + "@" + createUserFolder.getUserLastName().split(" ")[0] + createUserFolder.getUserFirstName().split(" ")[0] + "/";
             if(validateFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
                 File fileTemp = File.createTempFile("upload", ".tmp");
                 file.transferTo(fileTemp);
-                s3client.putObject(new PutObjectRequest("bucket-gw-storage",FOLDER_NAME + file.getOriginalFilename(),fileTemp));
+                s3client.putObject(new PutObjectRequest("bucket-gw-storage",GRADUATE_WORK_FOLDER + studentFolderPath + "propuestas/" + file.getOriginalFilename(),fileTemp));
                 return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
             }else{
                 System.out.println("Nombre invalido");

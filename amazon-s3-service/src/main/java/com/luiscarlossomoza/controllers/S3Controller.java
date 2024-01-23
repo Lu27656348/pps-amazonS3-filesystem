@@ -38,8 +38,11 @@ public class S3Controller {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<RequestResponse> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        return s3Service.uploadFile(file);
+    public ResponseEntity<RequestResponse> uploadFile(@RequestParam("file") MultipartFile file,@RequestParam("userData") String userData) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        CreateUserFolder studentData = mapper.readValue(userData, CreateUserFolder.class);
+        System.out.println(studentData);
+        return s3Service.uploadFile(file,studentData);
     }
 
     @PostMapping("/upload/double")

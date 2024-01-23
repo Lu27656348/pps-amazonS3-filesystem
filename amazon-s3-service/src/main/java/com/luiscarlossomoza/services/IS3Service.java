@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface IS3Service {
-    ResponseEntity<RequestResponse> uploadFile(MultipartFile file) throws IOException;
+    ResponseEntity<RequestResponse> uploadFile(MultipartFile file,CreateUserFolder userData) throws IOException;
     ResponseEntity<RequestResponse> uploadFileDouble(MultipartFile file, CreateUserFolder[] userData) throws IOException;
     ResponseEntity<RequestResponse> uploadGraduateWork(MultipartFile file, List<UserDataRequest> studentDataList) throws IOException;
 
