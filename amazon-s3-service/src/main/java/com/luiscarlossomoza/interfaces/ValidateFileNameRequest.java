@@ -10,4 +10,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ValidateFileNameRequest {
     private String fileName;
+    private String studentDNI;
+    private String userFirstName;
+    private String userLastName;
+    private Integer revisionNumber;
+    private Boolean areTwo;
+
+    public ValidateFileNameRequest(String fileName) {
+        this.fileName = fileName;
+    }
 }
