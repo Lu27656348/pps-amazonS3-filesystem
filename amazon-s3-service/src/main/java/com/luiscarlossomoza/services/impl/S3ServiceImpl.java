@@ -38,6 +38,8 @@ public class S3ServiceImpl implements IS3Service {
     private final String FOLDER_GWR_NAME = "graduatework/reviews/";
     private final String PDF_EXTENSION = ".pdf";
 
+    private final String INTERSHIP_FOLDER = "pasantias/";
+
 
 
     @Autowired
@@ -103,6 +105,26 @@ public class S3ServiceImpl implements IS3Service {
         }
 
     }
+
+    public ResponseEntity<RequestResponse> uploadIntershipProposal(MultipartFile file, CreateUserFolder userData) throws IOException {
+        try (InputStream is = file.getInputStream()) {
+            if(validateRevisionFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
+                File fileTemp = File.createTempFile("upload", ".tmp");
+                file.transferTo(fileTemp);
+                String studentFolderPath = INTERSHIP_FOLDER + userData.getStudentDNI()+"@"+userData.getUserLastName().split(" ")[0]+userData.getUserFirstName().split(" ")[0] + "/";
+                s3client.putObject(new PutObjectRequest("bucket-gw-storage",studentFolderPath + file.getOriginalFilename(),fileTemp));
+
+                return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
+            }else{
+                return ResponseEntity.badRequest().body(new RequestResponse("Error en nombre de archivo"));
+            }
+
+
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
     public Boolean validateFileName( ValidateFileNameRequest fileNameRequest ){
         System.out.println(fileNameRequest.getFileName());
         String regexValidator = "^[A-Z]{1}[a-z]+[A-Z]{1}[a-z]+(\s?[A-Z]{1}[a-z]+[A-Z]{1}[a-z]+)?\s(PTG|TG|Pasantía|SC|Propuesta\sPasantía|Propuesta\sSC)$";

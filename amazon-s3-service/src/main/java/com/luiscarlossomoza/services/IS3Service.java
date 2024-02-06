@@ -7,6 +7,7 @@ import com.luiscarlossomoza.interfaces.ValidateFileNameRequest;
 import com.luiscarlossomoza.interfaces.requests.CreateUserFolder;
 import com.luiscarlossomoza.interfaces.responses.VerifyFolderExistenseResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -39,4 +40,5 @@ public interface IS3Service {
 
     ResponseEntity<VerifyFolderExistenseResponse> verifyFolderPath(String folderPath) throws IOException;
 
+    ResponseEntity<RequestResponse> uploadIntershipProposal(MultipartFile file, CreateUserFolder userData) throws IOException;
 }

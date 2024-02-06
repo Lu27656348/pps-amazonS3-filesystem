@@ -3,6 +3,7 @@ package com.luiscarlossomoza.controllers;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luiscarlossomoza.interfaces.RequestResponse;
 import com.luiscarlossomoza.interfaces.UserDataRequest;
@@ -43,6 +44,14 @@ public class S3Controller {
         CreateUserFolder studentData = mapper.readValue(userData, CreateUserFolder.class);
         System.out.println(studentData);
         return s3Service.uploadFile(file,studentData);
+    }
+
+    @PostMapping("upload/pasantia/propuesta")
+    public ResponseEntity<RequestResponse> uploadIntershipProposal(@RequestParam("file") MultipartFile file,@RequestParam("studentData") String userData) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        CreateUserFolder studentData = mapper.readValue(userData, CreateUserFolder.class);
+        System.out.println(studentData);
+        return s3Service.uploadIntershipProposal(file,studentData);
     }
 
     @PostMapping("/upload/double")
@@ -162,6 +171,33 @@ public class S3Controller {
         try {
             // Obtener el objeto del archivo de S3
             String FOLDER_NAME = "trabajos_de_grado/"+fileName.getStudentDNI()+"@"+fileName.getUserLastName()+fileName.getUserFirstName()+"/"+"propuestas/";
+            System.out.println(FOLDER_NAME);
+            S3Object object = s3Client.getObject("bucket-gw-storage", FOLDER_NAME + fileName.getFileName());
+            S3ObjectInputStream s3is = object.getObjectContent();
+            // Configurar las cabeceras de la respuesta
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            ContentDisposition contentDisposition = ContentDisposition.attachment()
+                    .filename(fileName.getFileName())
+                    .build();
+            headers.setContentDisposition(contentDisposition);
+            headers.setContentLength(object.getObjectMetadata().getContentLength());
+
+
+            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(s3is));
+
+        } catch (Exception e) {
+            // Manejar la excepción
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/download/pasantia/propuesta")
+    public ResponseEntity<InputStreamResource> downloadPropuestaPasantia(@RequestBody ValidateFileNameRequest fileName) throws IOException {
+        try {
+            // Obtener el objeto del archivo de S3
+            String FOLDER_NAME = "pasantias/"+fileName.getStudentDNI()+"@"+fileName.getUserLastName().split(" ")[0]+fileName.getUserFirstName().split(" ")[0]+"/";
             System.out.println(FOLDER_NAME);
             S3Object object = s3Client.getObject("bucket-gw-storage", FOLDER_NAME + fileName.getFileName());
             S3ObjectInputStream s3is = object.getObjectContent();
