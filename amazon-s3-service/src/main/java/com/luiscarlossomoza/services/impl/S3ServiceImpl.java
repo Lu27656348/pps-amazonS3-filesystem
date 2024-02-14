@@ -126,6 +126,8 @@ public class S3ServiceImpl implements IS3Service {
     }
 
     public Boolean validateFileName( ValidateFileNameRequest fileNameRequest ){
+        return true;
+        /*
         System.out.println(fileNameRequest.getFileName());
         String regexValidator = "^[A-Z]{1}[a-z]+[A-Z]{1}[a-z]+(\s?[A-Z]{1}[a-z]+[A-Z]{1}[a-z]+)?\s(PTG|TG|Pasantía|SC|Propuesta\sPasantía|Propuesta\sSC)$";
         Pattern pattern = Pattern.compile(regexValidator);
@@ -136,6 +138,7 @@ public class S3ServiceImpl implements IS3Service {
         }
 
         return false;
+         */
     }
 
     public Boolean validateRevisionFileName( ValidateFileNameRequest fileNameRequest ){
