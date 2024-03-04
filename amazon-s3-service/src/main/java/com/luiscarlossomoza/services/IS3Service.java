@@ -14,16 +14,16 @@ import java.io.IOException;
 import java.util.List;
 
 public interface IS3Service {
-    ResponseEntity<RequestResponse> uploadFile(MultipartFile file,CreateUserFolder userData) throws IOException;
-    ResponseEntity<RequestResponse> uploadFileDouble(MultipartFile file, CreateUserFolder[] userData) throws IOException;
+    ResponseEntity<RequestResponse> uploadFile(MultipartFile file,CreateUserFolder[] userData, String escuela) throws IOException;
+    ResponseEntity<RequestResponse> uploadFileDouble(MultipartFile file, CreateUserFolder[] userData, String escuela) throws IOException;
     ResponseEntity<RequestResponse> uploadGraduateWork(MultipartFile file, List<UserDataRequest> studentDataList) throws IOException;
 
     ResponseEntity<RequestResponse> uploadCoordinatorEvaluation(MultipartFile file, List<UserDataRequest> studentData, UserDataRequest coordinatorData) throws IOException;
 
     ResponseEntity<RequestResponse> uploadRevision(MultipartFile file, List<UserDataRequest> studentDataList) throws IOException;
 
-    ResponseEntity<RequestResponse> uploadFinalSubmittion(MultipartFile file,List<UserDataRequest> studentDataList) throws IOException;
-    List<String> listFiles() throws IOException;
+    ResponseEntity<RequestResponse> uploadFinalSubmittion(MultipartFile file,List<UserDataRequest> studentDataList,String escuela) throws IOException;
+    List<String> listFiles(String schoolname) throws IOException;
     String deleteFile(String fileName);
 
     List<String> getGraduateWorkReviewsFiles() throws IOException;
@@ -40,5 +40,11 @@ public interface IS3Service {
 
     ResponseEntity<VerifyFolderExistenseResponse> verifyFolderPath(String folderPath) throws IOException;
 
-    ResponseEntity<RequestResponse> uploadIntershipProposal(MultipartFile file, CreateUserFolder userData) throws IOException;
+    ResponseEntity<RequestResponse> uploadIntershipProposal(MultipartFile file, CreateUserFolder userData, String escuela) throws IOException;
+
+    ResponseEntity<RequestResponse> cargarConsejoDeEscuela(MultipartFile file,String consejoDeEscuela,String schoolName) throws IOException;
+
+    ResponseEntity<RequestResponse> cargarComiteTG(MultipartFile file,String comiteTG, String schoolName) throws IOException;
+    public ResponseEntity<RequestResponse> cargarCartasJurado (MultipartFile[] file,List<UserDataRequest> studentDataList) throws IOException;
+
 }

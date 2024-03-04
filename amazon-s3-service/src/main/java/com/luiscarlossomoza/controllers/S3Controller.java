@@ -39,30 +39,30 @@ public class S3Controller {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<RequestResponse> uploadFile(@RequestParam("file") MultipartFile file,@RequestParam("userData") String userData) throws IOException {
+    public ResponseEntity<RequestResponse> uploadFile(@RequestParam("file") MultipartFile file,@RequestParam("userData") String userData,@RequestParam("escuela") String escuela) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        CreateUserFolder studentData = mapper.readValue(userData, CreateUserFolder.class);
+        CreateUserFolder[] studentData = mapper.readValue(userData, CreateUserFolder[].class);
         System.out.println(studentData);
-        return s3Service.uploadFile(file,studentData);
+        return s3Service.uploadFile(file,studentData,escuela);
     }
 
     @PostMapping("upload/pasantia/propuesta")
-    public ResponseEntity<RequestResponse> uploadIntershipProposal(@RequestParam("file") MultipartFile file,@RequestParam("studentData") String userData) throws IOException {
+    public ResponseEntity<RequestResponse> uploadIntershipProposal(@RequestParam("file") MultipartFile file,@RequestParam("studentData") String userData,@RequestParam("escuela") String escuela) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         CreateUserFolder studentData = mapper.readValue(userData, CreateUserFolder.class);
         System.out.println(studentData);
-        return s3Service.uploadIntershipProposal(file,studentData);
+        return s3Service.uploadIntershipProposal(file,studentData,escuela);
     }
 
     @PostMapping("/upload/double")
-    public ResponseEntity<RequestResponse> uploadFileDouble(@RequestParam("file") MultipartFile file, @RequestParam("userData") String uploadFileRequest) throws IOException {
+    public ResponseEntity<RequestResponse> uploadFileDouble(@RequestParam("file") MultipartFile file, @RequestParam("userData") String uploadFileRequest,@RequestParam("escuela") String escuela) throws IOException {
 
       CreateUserFolder[] myObjectsArray = new CreateUserFolder[2];
       ObjectMapper mapper = new ObjectMapper();
       CreateUserFolder[] uploadFileRequestArray = mapper.readValue(uploadFileRequest,CreateUserFolder[].class);
       System.out.println(uploadFileRequestArray[0]);
       System.out.println(uploadFileRequestArray[1]);
-      return s3Service.uploadFileDouble(file,uploadFileRequestArray);
+      return s3Service.uploadFileDouble(file,uploadFileRequestArray,escuela);
     }
 
     @PostMapping("/upload/graduatework/coordinator/evaluation")
@@ -140,14 +140,35 @@ public class S3Controller {
     }
 
     @PostMapping("/upload/graduatework/final")
-    public ResponseEntity<RequestResponse> uploadFinalSubmittion (@RequestParam("file") MultipartFile file, @RequestParam("studentData") String userDataRequest) throws IOException {
+    public ResponseEntity<RequestResponse> uploadFinalSubmittion (@RequestParam("file") MultipartFile file, @RequestParam("studentData") String userDataRequest, @RequestParam("escuela") String escuela) throws IOException {
         System.out.println(userDataRequest);
         ObjectMapper mapper = new ObjectMapper();
         List<UserDataRequest> studentDataList = List.of(mapper.readValue(userDataRequest, UserDataRequest[].class));
         for (UserDataRequest student : studentDataList){
             System.out.println(student);
         }
-        return s3Service.uploadFinalSubmittion(file,studentDataList);
+        return s3Service.uploadFinalSubmittion(file,studentDataList,escuela);
+    }
+
+    @PostMapping("/upload/consejo")
+    public ResponseEntity<RequestResponse> cargarConsejoDeEscuela (@RequestParam("file") MultipartFile file, @RequestParam("consejo") String consejoDeEscuela,@RequestParam("escuela") String schoolName) throws IOException {
+        return s3Service.cargarConsejoDeEscuela(file,consejoDeEscuela,schoolName);
+    }
+
+    @PostMapping("/upload/comite")
+    public ResponseEntity<RequestResponse> cargarComiteDeTrabajoDeGrado (@RequestParam("file") MultipartFile file, @RequestParam("comite") String comiteTG,@RequestParam("escuela") String schoolName) throws IOException {
+        return s3Service.cargarComiteTG(file,comiteTG,schoolName);
+    }
+
+    @PostMapping("/upload/cartas/jurado")
+    public ResponseEntity<RequestResponse> cargarCartasJurado (@RequestParam("file") MultipartFile[] file,@RequestParam("studentData") String userDataRequest) throws IOException {
+        System.out.println(userDataRequest);
+        ObjectMapper mapper = new ObjectMapper();
+        List<UserDataRequest> studentDataList = List.of(mapper.readValue(userDataRequest, UserDataRequest[].class));
+        for (UserDataRequest student : studentDataList){
+            System.out.println(student);
+        }
+        return s3Service.cargarCartasJurado(file,studentDataList);
     }
 
     @GetMapping("/graduatework/reviews/files")
@@ -170,7 +191,7 @@ public class S3Controller {
     public ResponseEntity<InputStreamResource> download(@RequestBody ValidateFileNameRequest fileName) throws IOException {
         try {
             // Obtener el objeto del archivo de S3
-            String FOLDER_NAME = "trabajos_de_grado/"+fileName.getStudentDNI()+"@"+fileName.getUserLastName()+fileName.getUserFirstName()+"/"+"propuestas/";
+            String FOLDER_NAME = fileName.getEscuela() + "/" + "trabajos_de_grado/"+fileName.getStudentDNI()+"@"+fileName.getUserLastName()+fileName.getUserFirstName()+"/"+"propuestas/";
             System.out.println(FOLDER_NAME);
             S3Object object = s3Client.getObject("bucket-gw-storage", FOLDER_NAME + fileName.getFileName());
             S3ObjectInputStream s3is = object.getObjectContent();
@@ -193,6 +214,32 @@ public class S3Controller {
         }
     }
 
+    @PostMapping("/download/graduatework/report")
+    public ResponseEntity<InputStreamResource> downloadReport(@RequestBody ValidateFileNameRequest[] fileName) throws IOException {
+        try {
+            // Obtener el objeto del archivo de S3
+            String FOLDER_NAME = fileName[0].getEscuela() + "/trabajos_de_grado/"+fileName[0].getStudentDNI()+"@"+fileName[0].getUserLastName().split(" ")[0]+fileName[0].getUserFirstName().split(" ")[0]+"/"+"defensa/";
+            System.out.println(FOLDER_NAME);
+            S3Object object = s3Client.getObject("bucket-gw-storage", FOLDER_NAME + fileName[0].getFileName());
+            S3ObjectInputStream s3is = object.getObjectContent();
+            // Configurar las cabeceras de la respuesta
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            ContentDisposition contentDisposition = ContentDisposition.attachment()
+                    .filename(fileName[0].getFileName())
+                    .build();
+            headers.setContentDisposition(contentDisposition);
+            headers.setContentLength(object.getObjectMetadata().getContentLength());
+
+
+            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(s3is));
+
+        } catch (Exception e) {
+            // Manejar la excepción
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     @PostMapping("/download/pasantia/propuesta")
     public ResponseEntity<InputStreamResource> downloadPropuestaPasantia(@RequestBody ValidateFileNameRequest fileName) throws IOException {
         try {
@@ -301,9 +348,9 @@ public class S3Controller {
         }
     }
 
-    @GetMapping("/list")
-    public List<String > getAllObjects() throws IOException {
-        return s3Service.listFiles();
+    @GetMapping("/list/{schoolname}")
+    public List<String > getAllObjects(@PathVariable String schoolname) throws IOException {
+        return s3Service.listFiles(schoolname);
     }
 
     @GetMapping("/validate")

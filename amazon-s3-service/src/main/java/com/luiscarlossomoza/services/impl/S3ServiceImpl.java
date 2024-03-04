@@ -106,12 +106,12 @@ public class S3ServiceImpl implements IS3Service {
 
     }
 
-    public ResponseEntity<RequestResponse> uploadIntershipProposal(MultipartFile file, CreateUserFolder userData) throws IOException {
+    public ResponseEntity<RequestResponse> uploadIntershipProposal(MultipartFile file, CreateUserFolder userData, String escuela) throws IOException {
         try (InputStream is = file.getInputStream()) {
             if(validateRevisionFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
                 File fileTemp = File.createTempFile("upload", ".tmp");
                 file.transferTo(fileTemp);
-                String studentFolderPath = INTERSHIP_FOLDER + userData.getStudentDNI()+"@"+userData.getUserLastName().split(" ")[0]+userData.getUserFirstName().split(" ")[0] + "/";
+                String studentFolderPath = escuela + "/" + INTERSHIP_FOLDER + userData.getStudentDNI()+"@"+userData.getUserLastName().split(" ")[0]+userData.getUserFirstName().split(" ")[0] + "/";
                 s3client.putObject(new PutObjectRequest("bucket-gw-storage",studentFolderPath + file.getOriginalFilename(),fileTemp));
 
                 return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
@@ -155,13 +155,58 @@ public class S3ServiceImpl implements IS3Service {
         //return false;
     }
 
-    public ResponseEntity<RequestResponse> uploadFile(MultipartFile file,CreateUserFolder createUserFolder) throws IOException {
+    public ResponseEntity<RequestResponse> cargarConsejoDeEscuela(MultipartFile file,String consejoDeEscuela,String schoolName) throws IOException {
         try (InputStream is = file.getInputStream()) {
-            String studentFolderPath = createUserFolder.getStudentDNI() + "@" + createUserFolder.getUserLastName().split(" ")[0] + createUserFolder.getUserFirstName().split(" ")[0] + "/";
+                File fileTemp = File.createTempFile("upload", ".tmp");
+                file.transferTo(fileTemp);
+                s3client.putObject(new PutObjectRequest("bucket-gw-storage",schoolName + "/Consejos de Escuela/" + consejoDeEscuela + "/" + file.getOriginalFilename(),fileTemp));
+                return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    public ResponseEntity<RequestResponse> cargarCartasJurado (MultipartFile[] file,List<UserDataRequest> studentDataList) throws IOException {
+
+        String studentFolderPath = studentDataList.getFirst().getUserDNI() + "@" + studentDataList.getFirst().getUserLastName().split(" ")[0] + studentDataList.getFirst().getUserFirstName().split(" ")[0] + "/";
+        for(MultipartFile fileData : file) {
+            try (InputStream is = fileData.getInputStream()) {
+                File fileTemp = File.createTempFile("upload", ".tmp");
+                fileData.transferTo(fileTemp);
+                s3client.putObject(new PutObjectRequest("bucket-gw-storage",GRADUATE_WORK_FOLDER + studentFolderPath + fileData.getOriginalFilename(),fileTemp));
+                if(studentDataList.size() > 1 ){
+                    String partnerFolderPath = studentDataList.getLast().getUserDNI() + "@" + studentDataList.getLast().getUserLastName().split(" ")[0] + studentDataList.getLast().getUserFirstName().split(" ")[0] + "/";
+                    s3client.copyObject(new CopyObjectRequest("bucket-gw-storage",GRADUATE_WORK_FOLDER + studentFolderPath + fileData.getOriginalFilename(),"bucket-gw-storage",GRADUATE_WORK_FOLDER + partnerFolderPath+fileData.getOriginalFilename()));
+                }
+            } catch (IOException e) {
+                throw new IOException(e.getMessage());
+            }
+        }
+
+        return ResponseEntity.ok(new RequestResponse("Archivos Subidos Correctamente"));
+
+    }
+    public ResponseEntity<RequestResponse> cargarComiteTG(MultipartFile file,String comiteTG,String schoolName) throws IOException {
+        try (InputStream is = file.getInputStream()) {
+            File fileTemp = File.createTempFile("upload", ".tmp");
+            file.transferTo(fileTemp);
+            s3client.putObject(new PutObjectRequest("bucket-gw-storage",schoolName+ "/"+ "Cómites de Trabajo de Grado/" + comiteTG + "/" + file.getOriginalFilename(),fileTemp));
+            return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+    public ResponseEntity<RequestResponse> uploadFile(MultipartFile file,CreateUserFolder[] createUserFolder, String escuela) throws IOException {
+        try (InputStream is = file.getInputStream()) {
+            String studentFolderPath = createUserFolder[0].getStudentDNI() + "@" + createUserFolder[0].getUserLastName().split(" ")[0] + createUserFolder[0].getUserFirstName().split(" ")[0] + "/";
             if(validateFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
                 File fileTemp = File.createTempFile("upload", ".tmp");
                 file.transferTo(fileTemp);
-                s3client.putObject(new PutObjectRequest("bucket-gw-storage",GRADUATE_WORK_FOLDER + studentFolderPath + "propuestas/" + file.getOriginalFilename(),fileTemp));
+                s3client.putObject(new PutObjectRequest("bucket-gw-storage",escuela + "/" +GRADUATE_WORK_FOLDER + studentFolderPath + "propuestas/" + file.getOriginalFilename(),fileTemp));
+                if( createUserFolder.length > 1){
+                    String studentFolderPath2 = createUserFolder[1].getStudentDNI() + "@" + createUserFolder[1].getUserLastName().split(" ")[0] + createUserFolder[1].getUserFirstName().split(" ")[0] + "/";
+                    s3client.copyObject(new CopyObjectRequest("bucket-gw-storage",escuela + "/" +GRADUATE_WORK_FOLDER + studentFolderPath + "propuestas/" + file.getOriginalFilename(),"bucket-gw-storage",escuela + "/" +GRADUATE_WORK_FOLDER + studentFolderPath2 + "propuestas/" + file.getOriginalFilename()));
+                }
                 return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
             }else{
                 System.out.println("Nombre invalido");
@@ -174,7 +219,7 @@ public class S3ServiceImpl implements IS3Service {
         }
     }
 
-    public ResponseEntity<RequestResponse> uploadFileDouble(MultipartFile file, CreateUserFolder[] userData) throws IOException {
+    public ResponseEntity<RequestResponse> uploadFileDouble(MultipartFile file, CreateUserFolder[] userData, String escuela) throws IOException {
         try {
             VerifyFolderExistenseResponse hasFirstStudentFolder = verifyFolderExistence(userData[0].getStudentDNI(),userData[0].getUserFirstName(),userData[0].getUserLastName()).getBody();
             VerifyFolderExistenseResponse hasSecondtStudentFolder = verifyFolderExistence(userData[1].getStudentDNI(),userData[1].getUserFirstName(),userData[1].getUserLastName()).getBody();
@@ -192,8 +237,8 @@ public class S3ServiceImpl implements IS3Service {
             if(validateFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
                 File fileTemp = File.createTempFile("upload", ".tmp");
                 file.transferTo(fileTemp);
-                String firstStudentFolderPath = GRADUATE_WORK_FOLDER + userData[0].getStudentDNI() + "@" + userData[0].getUserLastName() + userData[0].getUserFirstName();
-                String secondtStudentFolderPath = GRADUATE_WORK_FOLDER + userData[1].getStudentDNI() + "@" + userData[1].getUserLastName() + userData[1].getUserFirstName();
+                String firstStudentFolderPath = escuela + "/"+ GRADUATE_WORK_FOLDER + userData[0].getStudentDNI() + "@" + userData[0].getUserLastName() + userData[0].getUserFirstName();
+                String secondtStudentFolderPath = escuela + "/" + GRADUATE_WORK_FOLDER + userData[1].getStudentDNI() + "@" + userData[1].getUserLastName() + userData[1].getUserFirstName();
                 System.out.println(firstStudentFolderPath);
                 System.out.println(secondtStudentFolderPath);
                 s3client.putObject(new PutObjectRequest("bucket-gw-storage",firstStudentFolderPath + "/propuestas/" + file.getOriginalFilename(),fileTemp));
@@ -282,17 +327,17 @@ public class S3ServiceImpl implements IS3Service {
         }
     }
 
-    public ResponseEntity<RequestResponse> uploadFinalSubmittion(MultipartFile file, List<UserDataRequest> studentDataList) throws IOException {
+    public ResponseEntity<RequestResponse> uploadFinalSubmittion(MultipartFile file, List<UserDataRequest> studentDataList,String escuela) throws IOException {
         try (InputStream is = file.getInputStream()) {
             //Validamos el nombre del archivo
             System.out.println("Nombre del archivo = " + file.getOriginalFilename().replace(PDF_EXTENSION,""));
             if(validateFileName(new ValidateFileNameRequest(file.getOriginalFilename().replace(PDF_EXTENSION,"")))){
-                String studentFolderPath = GRADUATE_WORK_FOLDER + studentDataList.getFirst().getUserDNI() + "@" + studentDataList.getFirst().getUserLastName().split(" ")[0] + studentDataList.getFirst().getUserFirstName().split(" ")[0] + "/";
+                String studentFolderPath = escuela + "/" + GRADUATE_WORK_FOLDER + studentDataList.getFirst().getUserDNI() + "@" + studentDataList.getFirst().getUserLastName().split(" ")[0] + studentDataList.getFirst().getUserFirstName().split(" ")[0] + "/";
                 File fileTemp = File.createTempFile("upload", ".tmp");
                 file.transferTo(fileTemp);
                 s3client.putObject(new PutObjectRequest("bucket-gw-storage",studentFolderPath + "defensa/"+ file.getOriginalFilename(),fileTemp));
                 if(studentDataList.size() > 1){
-                    String partnerFolderPath = GRADUATE_WORK_FOLDER + studentDataList.getLast().getUserDNI() + "@" + studentDataList.getLast().getUserLastName().split(" ")[0] + studentDataList.getLast().getUserFirstName().split(" ")[0] + "/";
+                    String partnerFolderPath = escuela + "/" + GRADUATE_WORK_FOLDER + studentDataList.getLast().getUserDNI() + "@" + studentDataList.getLast().getUserLastName().split(" ")[0] + studentDataList.getLast().getUserFirstName().split(" ")[0] + "/";
                     s3client.copyObject(new CopyObjectRequest("bucket-gw-storage",studentFolderPath + "defensa/"+ file.getOriginalFilename(),"bucket-gw-storage",partnerFolderPath + "defensa/"+ file.getOriginalFilename()));
                 }
                 return ResponseEntity.ok(new RequestResponse("Archivo Subido Correctamente"));
@@ -325,9 +370,11 @@ public class S3ServiceImpl implements IS3Service {
         }
     }
 
-    public List<String> listFiles() throws IOException {
+    public List<String> listFiles(String schoolname) throws IOException {
         try {
-            ListObjectsV2Result result = s3client.listObjectsV2("bucket-gw-storage");
+            System.out.println(schoolname);
+            System.out.println("bucket-gw-storage"+"/"+schoolname+"/");
+            ListObjectsV2Result result = s3client.listObjectsV2("bucket-gw-storage", schoolname + "/");
             List<S3ObjectSummary> objects = result.getObjectSummaries();
             List<String> fileNames = new ArrayList<>();
             for (S3ObjectSummary os : objects) {

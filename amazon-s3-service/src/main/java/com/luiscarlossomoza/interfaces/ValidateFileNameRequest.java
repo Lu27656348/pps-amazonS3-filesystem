@@ -15,6 +15,7 @@ public class ValidateFileNameRequest {
     private String userLastName;
     private Integer revisionNumber;
     private Boolean areTwo;
+    private String escuela;
 
     public ValidateFileNameRequest(String fileName) {
         this.fileName = fileName;

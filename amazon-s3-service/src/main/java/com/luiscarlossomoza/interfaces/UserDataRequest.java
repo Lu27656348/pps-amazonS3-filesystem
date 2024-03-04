@@ -11,4 +11,5 @@ public class UserDataRequest {
     private String userEmail;
     private String userEmailAlt;
     private String userPhone;
+    private String schoolName;
 }
