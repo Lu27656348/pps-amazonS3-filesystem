@@ -244,7 +244,7 @@ public class S3Controller {
     public ResponseEntity<InputStreamResource> downloadPropuestaPasantia(@RequestBody ValidateFileNameRequest fileName) throws IOException {
         try {
             // Obtener el objeto del archivo de S3
-            String FOLDER_NAME = "pasantias/"+fileName.getStudentDNI()+"@"+fileName.getUserLastName().split(" ")[0]+fileName.getUserFirstName().split(" ")[0]+"/";
+            String FOLDER_NAME = fileName.getEscuela()+ "/pasantias/"+fileName.getStudentDNI()+"@"+fileName.getUserLastName().split(" ")[0]+fileName.getUserFirstName().split(" ")[0]+"/";
             System.out.println(FOLDER_NAME);
             S3Object object = s3Client.getObject("bucket-gw-storage", FOLDER_NAME + fileName.getFileName());
             S3ObjectInputStream s3is = object.getObjectContent();
