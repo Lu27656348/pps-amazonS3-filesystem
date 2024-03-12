@@ -398,7 +398,7 @@ public class S3ServiceImpl implements IS3Service {
 
     public  List<String> getGraduateWorkFiles() throws IOException{
         try {
-            ListObjectsV2Result result = s3client.listObjectsV2("bucket-gw-storage","graduatework/");
+            ListObjectsV2Result result = s3client.listObjectsV2("bucket-gw-storage","Informática/");
             List<S3ObjectSummary> objects = result.getObjectSummaries();
             List<String> fileNames = new ArrayList<>();
             for (S3ObjectSummary os : objects) {
