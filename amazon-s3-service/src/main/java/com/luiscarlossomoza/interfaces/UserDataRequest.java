@@ -12,4 +12,6 @@ public class UserDataRequest {
     private String userEmailAlt;
     private String userPhone;
     private String schoolName;
+    private String graduateWorkId;
+
 }
